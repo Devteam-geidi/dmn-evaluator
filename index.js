@@ -10,6 +10,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// Initialize Zeebe client
 const zbClient = new ZBClient(
   process.env.ZEEBE_GRPC_ADDRESS,
   {
@@ -24,23 +25,23 @@ const zbClient = new ZBClient(
 
 // DMN Evaluation Endpoint
 app.post('/evaluate', async (req, res) => {
-  const inputValue = req.body.input;
+  const route = req.body.route;
 
-  if (!inputValue) {
-    return res.status(400).json({ error: 'Missing "input" in request body' });
+  if (!route) {
+    return res.status(400).json({ error: 'Missing "route" in request body' });
   }
 
   try {
     const result = await zbClient.evaluateDecision({
       decisionId: 'RoutingDecision',
       variables: {
-        input: inputValue
+        route: route
       }
     });
 
-    const output = result.decisions?.[0]?.outputs?.[0]?.output;
+    const output = result.decisions?.[0]?.outputs?.[0]?.finalRoute;
 
-    return res.json({ result: output });
+    return res.json({ finalRoute: output });
   } catch (err) {
     console.error('DMN Evaluation failed:', err);
     return res.status(500).json({ error: 'Failed to evaluate decision' });
