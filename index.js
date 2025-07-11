@@ -33,7 +33,7 @@ app.post('/evaluate', async (req, res) => {
 
   try {
     const result = await zbClient.evaluateDecision({
-      decisionId: 'RoutingDecision',
+      decisionId: 'emailAutoRoutingDecision',
       variables: {
         route: route
       }
