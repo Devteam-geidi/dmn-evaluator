@@ -1,53 +1,32 @@
-// Filename: index.js
-
-const express = require('express');
-const { ZBClient } = require('zeebe-node');
-const axios = require('axios');
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const { Camunda8 } = require("@camunda8/sdk");
 
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const camunda = new Camunda8({
+  clientId: process.env.ZEEBE_CLIENT_ID,
+  clientSecret: process.env.ZEEBE_CLIENT_SECRET,
+  clusterId: process.env.ZEEBE_CLUSTER_ID,
+  region: process.env.ZEEBE_REGION,
+});
 
-// Initialize Zeebe client
-const zbClient = new ZBClient(
-  process.env.ZEEBE_GRPC_ADDRESS,
-  {
-    oAuth: {
-      url: process.env.ZEEBE_AUTHORIZATION_SERVER_URL,
-      audience: process.env.ZEEBE_TOKEN_AUDIENCE,
-      clientId: process.env.ZEEBE_CLIENT_ID,
-      clientSecret: process.env.ZEEBE_CLIENT_SECRET,
-    }
-  }
-);
-
-// DMN Evaluation Endpoint
-app.post('/evaluate', async (req, res) => {
-  const route = req.body.route;
-
-  if (!route) {
-    return res.status(400).json({ error: 'Missing "route" in request body' });
-  }
-
+app.post("/evaluate", async (req, res) => {
   try {
-    const result = await zbClient.evaluateDecision({
-      decisionId: 'emailAutoRoutingDecision',
-      variables: {
-        route: route
-      }
+    const result = await camunda.evaluateDecisionById({
+      decisionId: process.env.DMN_DECISION_ID,
+      variables: req.body,
     });
 
-    const output = result.decisions?.[0]?.outputs?.[0]?.finalRoute;
-
-    return res.json({ finalRoute: output });
-  } catch (err) {
-    console.error('DMN Evaluation failed:', err);
-    return res.status(500).json({ error: 'Failed to evaluate decision' });
+    res.json(result);
+  } catch (error) {
+    console.error("DMN Evaluation failed:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`DMN evaluator service running on port ${PORT}`);
+  console.log(`✅ DMN evaluator running at http://localhost:${PORT}`);
 });
