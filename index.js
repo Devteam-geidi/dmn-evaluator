@@ -5,19 +5,15 @@ const { Camunda8 } = require("@camunda8/sdk");
 const app = express();
 app.use(express.json());
 
-const camunda = new Camunda8({
-  clientId: process.env.ZEEBE_CLIENT_ID,
-  clientSecret: process.env.ZEEBE_CLIENT_SECRET,
-  clusterId: process.env.ZEEBE_CLUSTER_ID,
-  region: process.env.ZEEBE_REGION,
-  oauthURL: process.env.CAMUNDA_OAUTH_URL,
-});
+const c8 = new Camunda8();
+
+const zeebe = c8.getZeebeGrpcApiClient(); // 🎯 Correct client
 
 app.post("/evaluate", async (req, res) => {
   try {
-    const result = await camunda.evaluateDecision({
+    const result = await zeebe.evaluateDecision({
       decisionId: process.env.DMN_DECISION_ID,
-      variables: req.body
+      variables: req.body,
     });
 
     res.json(result);
