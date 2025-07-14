@@ -10,13 +10,14 @@ const camunda = new Camunda8({
   clientSecret: process.env.ZEEBE_CLIENT_SECRET,
   clusterId: process.env.ZEEBE_CLUSTER_ID,
   region: process.env.ZEEBE_REGION,
+  oauthURL: process.env.CAMUNDA_OAUTH_URL,
 });
 
 app.post("/evaluate", async (req, res) => {
   try {
-    const result = await camunda.evaluateDecisionById({
+    const result = await camunda.evaluateDecision({
       decisionId: process.env.DMN_DECISION_ID,
-      variables: req.body,
+      variables: req.body
     });
 
     res.json(result);
@@ -26,7 +27,7 @@ app.post("/evaluate", async (req, res) => {
   }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ DMN evaluator running at http://localhost:${PORT}`);
 });
